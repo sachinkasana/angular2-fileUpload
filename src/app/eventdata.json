@@ -1,0 +1,10 @@
+﻿[
+  {
+    "id":"7",
+    "text":"Task 1",
+    "start":"2017-01-30T00:00:00",
+    "end":"2017-02-03T00:00:00",
+    "resource":"2",
+    "bubbleHtml":"Event details: <br\/>Task 1"
+  }
+]
