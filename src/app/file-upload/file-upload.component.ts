@@ -5,7 +5,7 @@ import { ImageService, Header } from "./image.service";
 class FileHolder {
     public serverResponse: any;
     public pending: boolean = false;
-    constructor(private src: string, public file: File, public name: string, public uploadedDate: string) { }
+    constructor(public src: string, public file: File, public name: string, public uploadedDate: string,public path:string) { }
 }
 @Component({
     selector: 'image-upload',
@@ -17,7 +17,7 @@ class FileHolder {
       <span>{{buttonCaption}}</span>
       <input
         type="file"
-        
+        name="userPhoto"
         multiple (change)="fileChange(input.files)"
         #input>
     </label>
@@ -35,7 +35,11 @@ class FileHolder {
       <div *ngIf="!file.pending" class="x-mark" (click)="deleteFile(file)">
         <span class="close"></span>
       </div>
-	  
+<div *ngIf="!file.pending" >
+<span class="close"></span>
+<a href="{{file.src}}" target="_blank" > Download</a>
+ 
+	   
 	  
     </div>
   </div>
@@ -114,7 +118,7 @@ label.upload-button input[type=file] {
   float: left;
   display: inline-block;
   margin: 6px;
-  width:100%;
+  width:90%;
  
   background: center center no-repeat;
   background-size: contain;
@@ -132,6 +136,20 @@ label.upload-button input[type=file] {
   opacity: .7;
   color: white;
   margin: 2px;
+}
+.d-mark {
+  width: 5px;
+  height: 20px;
+  text-align: center;
+  cursor: pointer;
+  border-radius: 2px;
+  float: right;
+  background-color: Blue;
+  opacity: .7;
+  color: Black;
+  margin: 5px;
+ background-image: url("./icons/download-icon.png");
+    background-color: #cccccc;
 }
 
 .close {
@@ -265,12 +283,12 @@ export class FileUploadComponent implements OnInit {
 
             let reader = new FileReader();
             reader.addEventListener('load', (event: any) => {
-                let fileHolder: FileHolder = new FileHolder(event.target.result, file, file.name, '02.01.2017');
+                let fileHolder: FileHolder = new FileHolder(event.target.result, file, file.name, '02.01.2017','');
 
                 fileHolder.serverResponse = `good boy: ${i}`;
 
                 this.uploadSingleFile(fileHolder);
-
+                debugger;
                 this.files.push(fileHolder);
 
             }, false);
@@ -281,12 +299,15 @@ export class FileUploadComponent implements OnInit {
     }
 
     private uploadSingleFile(fileHolder: FileHolder) {
-        if (this.url) {
+        //if (true) {
             this.pendingFilesCounter++;
             fileHolder.pending = true;
 
             this.imageService.postImage(fileHolder.file, this.headers).subscribe(response => {
+                debugger;
+                var res = JSON.parse(response);
                 fileHolder.serverResponse = response;
+                fileHolder.src = res.files.file.path;
                 this.onFileUploadFinish.emit(fileHolder);
                 fileHolder.pending = false;
                 if (--this.pendingFilesCounter == 0) {
@@ -294,17 +315,28 @@ export class FileUploadComponent implements OnInit {
                 }
             });
 
-        } else {
-            this.onFileUploadFinish.emit(fileHolder);
-        }
+        //} else {
+        //    this.onFileUploadFinish.emit(fileHolder);
+        //}
     }
 
     private deleteFile(file: FileHolder): void {
-        let index = this.files.indexOf(file);
-        this.files.splice(index, 1);
-        this.fileCounter--;
+        var isDelete = confirm("Are you sure to delete this file?");
+        if (isDelete == true) {
+            this.imageService.deleteFile(file.name)
+                .subscribe(
+                value => {
+                    let index = this.files.indexOf(file);
+                    this.files.splice(index, 1);
+                    this.fileCounter--;
 
-        this.onRemove.emit(file);
+                    this.onRemove.emit(file);
+                })
+        }
+        else
+        {
+            return;
+        }
     }
 
     fileOver(isOver) {
